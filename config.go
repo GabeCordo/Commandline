@@ -2,7 +2,7 @@ package commandline
 
 import (
 	"encoding/json"
-	"github.com/GabeCordo/commandline/paths"
+	"github.com/FortifiedCode/commandline/paths"
 )
 
 const (
