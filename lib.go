@@ -1,7 +1,7 @@
 package commandline
 
 import (
-	"github.com/FortifiedCode/commandline/paths"
+	"github.com/GabeCordo/Commandline/paths"
 )
 
 // DEBUG COMMAND START

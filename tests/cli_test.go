@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"github.com/FortifiedCode/commandline"
+	"github.com/GabeCordo/Commandline"
 	"testing"
 )
 
