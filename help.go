@@ -12,6 +12,10 @@ type HelpCommand struct {
 func (helpCommand HelpCommand) Run(cli *CommandLine) TerminateOnCompletion {
 	categories := make(map[string][]*CommandWrapper)
 
+	if cli.Graphics.Banner != "" {
+		fmt.Println(cli.Graphics.Banner)
+	}
+
 	for _, commandWrapper := range cli.commands {
 		category := commandWrapper.Category()
 		if array, found := categories[category]; found {

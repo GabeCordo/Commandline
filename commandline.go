@@ -23,6 +23,10 @@ type CommandLine struct {
 
 	flags [numOfFlags]bool
 
+	Graphics struct {
+		Banner string
+	}
+
 	MetaData struct {
 		WorkingDirectory string
 		TimeCalled       time.Time
@@ -59,6 +63,10 @@ func (cli *CommandLine) AddCommand(identifier string, function Command) *Command
 	cli.commands[identifier] = commandWrapper
 
 	return commandWrapper
+}
+
+func (cli *CommandLine) AddBanner(banner string) {
+	cli.Graphics.Banner = banner
 }
 
 // UnknownCommand
@@ -130,6 +138,16 @@ func (cli *CommandLine) Run() {
 	cli.numOfArgs = len(cli.args)
 	cli.argsPointer = 0
 
+	// the commandline tool shall display the `help` callback when no arguments are provided
+	if len(cli.args) == 0 {
+		if commandWrapper, found := cli.commands["help"]; found {
+			commandWrapper.Command().Run(cli)
+		}
+		return
+	}
+
+	// the commandline shall iterate through the arguments and call the callbacks that match
+	// the identifier entered by the user in the argument.
 	for arg := cli.args[0]; arg != FinalArg; arg = cli.NextArg() {
 		var terminateFlag TerminateOnCompletion = false
 		if commandWrapper, found := cli.commands[arg]; found {
@@ -140,13 +158,6 @@ func (cli *CommandLine) Run() {
 
 		if terminateFlag {
 			return
-		}
-	}
-
-	// the commandline tool shall display the `help` callback when no arguments are provided
-	if len(cli.args) == 0 {
-		if commandWrapper, found := cli.commands["help"]; found {
-			commandWrapper.Command().Run(cli)
 		}
 	}
 
