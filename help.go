@@ -2,6 +2,9 @@ package commandline
 
 import (
 	"fmt"
+	"os"
+	"sort"
+	"text/tabwriter"
 )
 
 // HELP COMMAND START
@@ -26,23 +29,45 @@ func (helpCommand HelpCommand) Run(cli *CommandLine) TerminateOnCompletion {
 		}
 	}
 
-	for category, commandWrapperArray := range categories {
+	// the help command shall sort the categories by alphabetical order.
+	// note: iterating through a map would result in non-deterministic behaviour.
+	categoryNames := make([]string, 0, len(categories))
+	for category := range categories {
+		categoryNames = append(categoryNames, category)
+	}
+	sort.Strings(categoryNames)
+
+	writer := tabwriter.NewWriter(os.Stdout, 0, 8, 2, ' ', 0)
+	defer writer.Flush()
+
+	for _, category := range categoryNames {
+		commandWrapperArray := categories[category]
+
+		// do not print the core or flags category
+		if (category == "flags") || (category == "core") {
+			continue
+		}
+
 		// do not print a category if it is an empty string
 		if len(category) != 0 {
-			fmt.Printf("[%s]\n", category)
+			fmt.Fprintf(writer, "[%s]\n", category)
 		}
-		// group commands together by category
+
+		// the help command shall sort the commands by alphabetical order.
+		// note: iterating through a map would result in non-deterministic behaviour.
+		sort.Slice(commandWrapperArray, func(i, j int) bool {
+			return commandWrapperArray[i].identifier < commandWrapperArray[j].identifier
+		})
+
 		for _, commandWrapper := range commandWrapperArray {
-			if category == "flags" {
-				fmt.Printf("\t%s", commandWrapper.identifier)
-			} else {
-				fmt.Printf("\t%s\t%s\n", commandWrapper.identifier, commandWrapper.description)
-				for flag, description := range commandWrapper.variants {
-					fmt.Printf("\t\t%s => %s\n", flag, description)
-				}
+			fmt.Fprintf(writer, "  %s\t%s\n", commandWrapper.identifier, commandWrapper.description)
+
+			for flag, description := range commandWrapper.variants {
+				fmt.Fprintf(writer, "    %s\t%s\n", flag, description)
 			}
 		}
-		fmt.Println()
+
+		fmt.Fprintln(writer)
 	}
 
 	return Terminate
@@ -69,7 +94,7 @@ func (helpScopeCommand HelpScopeCommand) Run(cli *CommandLine) TerminateOnComple
 			if variant, found := commandWrapper.variants[cli.args[1]]; found {
 				fmt.Println(variant)
 			} else {
-				fmt.Printf("%s [%s] either does not exist or does not have a description")
+				fmt.Printf("%s [%s] either does not exist or does not have a description\n", cli.args[0], cli.args[1])
 			}
 		}
 	} else {
